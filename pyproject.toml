@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "nremc-database-connector"
+version = "0.9.0"
+description = ""
+authors = ["kc-nremc <k_courtney@nremc.com>"]
+readme = "README.md"
+packages = [{include = "nremc_database_connector"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyodbc = "^4.0.35"
+tomli = "^2.0.1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+pytest = "^7.2.0"
+mkdocs = "^1.4.2"
+mkdocstrings = {extras = ["python"], version = "^0.19.1"}
+mkdocs-material = "^9.0.4"
+
+
+[[tool.poetry.source]]
+name = "nremc-pypi"
+url = "http://10.16.8.38:8000/simple/"
+default = false
+secondary = true
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

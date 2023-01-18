@@ -1,0 +1,9 @@
+[sql_server]
+server = "TestBed1"
+database = "PythonTest"
+version = 17
+
+[sql_commands]
+SELECT_ALL_PEOPLE = "SELECT * FROM [dbo].[People]"
+SELECT_PERSON_BY_ID = "SELECT * FROM [dbo].[People] WHERE [id] = ?"
+UPDATE_AGE_BY_ID = "UPDATE [dbo].[People] set [name] = ?, [age] = ? WHERE [id] = ?"
