@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "nremc-database-connector"
-version = "0.9.0"
-description = ""
+version = "0.10.0"
+description = "Database connector for NREMC"
 authors = ["kc-nremc <k_courtney@nremc.com>"]
 readme = "README.md"
 packages = [{include = "nremc_database_connector"}]

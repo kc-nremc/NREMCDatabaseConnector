@@ -11,6 +11,7 @@ Misc Types:
 import pyodbc
 import tomli
 from pyodbc import Cursor, Row
+from typing import Any, Optional, Literal
 
 Commands = dict[str, str]
 
@@ -18,7 +19,7 @@ Commands = dict[str, str]
 class NREMCDatabaseConnector(object):
     """Class that creates and maintains a database connection with pyodbc.
 
-    Creataes a server connection using pyodbc to allow the user to execute stored
+    Creates a server connection using pyodbc to allow the user to execute stored
     commands and retrieve information, insert data, update data, or delete data
 
     Attributes:
@@ -37,7 +38,7 @@ class NREMCDatabaseConnector(object):
         """Creates a connection to the sql server
 
         Takes in the servers name which database to connect too and the ODBC driver version to use
-        Addtionally takes in a dict with all command identifiers and predefined commands to execute
+        Additionally takes in a dict with all command identifiers and predefined commands to execute
 
         Args:
             server (str, optional): Name of server to connect to. Defaults to ".".
@@ -100,8 +101,8 @@ class NREMCDatabaseConnector(object):
         to execute the command and then returns the cursor
 
         Args:
-            cmd (str): Command identifer to tell the connection which command to run
-            *args (tuple[Any]): Arguemnts to pass to the command
+            cmd (str): Command identifier to tell the connection which command to run
+            *args (tuple[Any]): Arguments to pass to the command
 
         Returns:
             Cursor: Returns a cursor connection to the server after the command is executed
@@ -109,16 +110,65 @@ class NREMCDatabaseConnector(object):
         return self._crsr.execute(self._cmds[cmd], *args)
 
     def call_many(self, cmd: str, *args) -> None:
-        """Executes a prefined sql command many times.
+        """Executes a predefined sql command many times.
 
         Args:
             cmd (str): Command identifier to tell the connection which command to run.
-            *args (tuple[Any]): Arguemnts to pass to the command.
+            *args (tuple[Any]): Arguments to pass to the command.
         """
         self._crsr.executemany(self._cmds[cmd], *args)
 
+    def fill_insert(self, cmd: str, keys_and_values: dict[Any, Any]) -> Cursor:
+        """Fills a insert command by taking the keys from 'keys_and_values' and setting them as the columns and the values from 'keys_and_values' and executing the query with those values
+        
+        Args:
+            cmd (str): Command identifier to tell the connection which command to run
+            keys_and_values (dict[Any, Any]): Dict of the columns you want to insert into and values to place into those columns
+
+        Returns:
+            Cursor: Returns a cursor connection to the server after the command is executed
+        """
+        query = self._cmds[cmd].format(
+            ", ".join(keys_and_values.keys()),
+            ", ".join(["?"] * len(keys_and_values))
+        )
+        values = tuple(keys_and_values.values())
+        return self._crsr.execute(query, values)
+        
+    def fill_update(self, cmd: str, keys_and_values: dict[Any, Any], conditional_keys: list[Any], conditional_connectors: Optional[list[Literal["AND", "OR"]]] = None) -> Cursor:
+        """Fills a update command by using a dict and taking its keys as columns to update and search by and its values as new values or search values
+
+        Args:
+            cmd (str): Command identifier to tell the connection which command to run
+            keys_and_values (dict[Any, Any]): Dict of the columns you wan to update and or search and values associated with  those columns
+            conditional_keys (list[Any]): Keys in the dict that are meant to go in the where close
+            conditional_connectors (Optional[list[Literal[&quot;AND&quot;, &quot;OR&quot;]]], optional): If two conditional keys are given they need a connector either 'AND' or 'OR'. Defaults to None.
+
+        Returns:
+            Cursor: Returns a cursor connection to the server after the command is executed
+        """
+        update_query = self._cmds[cmd]
+        vals = []
+        
+        for key, val in keys_and_values.items():
+            if key not in conditional_keys:
+                update_query += f"{key} = ?, "
+                vals.append(val)
+        
+        cond_vals = []
+        
+        conds = list(zip(conditional_keys, conditional_connectors + [""]))
+        update_query = update_query.rstrip(", ") + "WHERE = "
+        for cond, connector in conds:
+            update_query += cond + " = ?" + connector + ", "
+            cond_vals.append(keys_and_values[cond])
+        update_query = update_query.rstrip(", ")
+        
+        return self._crsr.execute(update_query, vals.extend(cond_vals))
+        
+
     def fetch(self, size: int = 1) -> Row | list[Row] | None:
-        """Fetchs the results from a SELECT query on the database
+        """Fetches the results from a SELECT query on the database
 
         Args:
             size (int, optional): How many row you want to fetch from the cursor. Defaults to 1.
@@ -145,7 +195,7 @@ class NREMCDatabaseConnector(object):
         self._crsr.commit()
 
     def rollback(self) -> None:
-        """Rollsback any non commited changes to the database"""
+        """Rolls back any non committed changes to the database"""
         self._crsr.rollback()
 
     def set_command(self, identifier: str, command: str) -> None:

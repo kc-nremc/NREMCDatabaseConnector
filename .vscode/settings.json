@@ -1,9 +1,11 @@
 {
     "cSpell.words": [
         "Albanese",
+        "crsr",
         "linenums",
         "NREMC",
         "ODBC",
-        "pyodbc"
+        "pyodbc",
+        "tomli"
     ]
 }

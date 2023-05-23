@@ -1,5 +1,7 @@
 site_name: NREMC Database Connector Docs
 
+repo_url: https://github.com/kc-nremc/NREMCDatabaseConnector
+
 theme:
   name: "material"
 
